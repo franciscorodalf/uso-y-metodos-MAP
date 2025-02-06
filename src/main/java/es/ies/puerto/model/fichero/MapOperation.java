@@ -11,10 +11,7 @@ import java.util.TreeMap;
 
 import main.java.es.ies.puerto.model.Empleado;
 
-abstract public class MapOperation  {
-
-    //File fichero;
-    //String path = "C:\\Users\\Francisco\\Documents\\GitHub\\uso-y-metodos-java\\src\\main\\resources\\empleados.txt";
+abstract public class MapOperation {
 
     protected Map<String, Empleado> readFile(File file) {
         Map<String, Empleado> empleados = new TreeMap<>();
@@ -22,8 +19,9 @@ abstract public class MapOperation  {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] datos = line.split(", ");
-                if(datos.length == 5) {
-                    Empleado empleado = new Empleado(datos[0], datos[1], datos[2], Double.parseDouble(datos[3]), datos[4]);
+                if (datos.length == 5) {
+                    Empleado empleado = new Empleado(datos[0], datos[1], datos[2], Double.parseDouble(datos[3]),
+                            datos[4]);
                     empleados.putIfAbsent(empleado.getIdentificador(), empleado);
                 }
             }
@@ -32,7 +30,6 @@ abstract public class MapOperation  {
         }
         return empleados;
     }
-
 
     protected boolean updateFile(Map<String, Empleado> empleados, File file) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {

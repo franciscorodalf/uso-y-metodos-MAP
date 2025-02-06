@@ -18,7 +18,6 @@ public class FileOperations extends MapOperation implements Operations {
     String path = "src/main/resources/empleados.txt";
 
     public FileOperations() {
-        // fichero = new File(path);
 
         try {
             URL source = getClass().getClassLoader().getResource(nombreFichero);
