@@ -11,57 +11,40 @@ import java.util.TreeMap;
 
 import main.java.es.ies.puerto.model.Empleado;
 
-public class MapOperation  {
+abstract public class MapOperation  {
 
-    File fichero;
-    String path = "C:\\Users\\Francisco\\Documents\\GitHub\\uso-y-metodos-java\\src\\main\\resources\\empleados.txt";
+    //File fichero;
+    //String path = "C:\\Users\\Francisco\\Documents\\GitHub\\uso-y-metodos-java\\src\\main\\resources\\empleados.txt";
 
-    public boolean updateFile(Map<String,Empleado> empleados, File file) {
-        try {
-            file.delete();
-            file.createNewFile();
-
-        } catch (IOException e) {
-            return true;
-        }
-        for (Empleado empleado : empleados.values()) {
-            create(empleado);
-        }
-        return true;
-    }
-
-    public boolean create(Empleado empleado) {
-        if (empleado == null || empleado.getIdentificador() == null) {
-            return false;
-        }
-        Map<String,Empleado> empleados = read(fichero);
-        if (empleados.containsKey(empleado.getIdentificador())) {
-            return false;
-        }
-        return create(empleado.toString(), fichero);
-    }
-
-    public static boolean create(String data, File file) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-            writer.write(data);
-            writer.newLine();
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    public static Map<String, Empleado> read(File file) {
+    protected Map<String, Empleado> readFile(File file) {
         Map<String, Empleado> empleados = new TreeMap<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+                String[] datos = line.split(", ");
+                if(datos.length == 5) {
+                    Empleado empleado = new Empleado(datos[0], datos[1], datos[2], Double.parseDouble(datos[3]), datos[4]);
+                    empleados.putIfAbsent(empleado.getIdentificador(), empleado);
+                }
             }
         } catch (IOException e) {
             System.out.println("Error al leer el archivo: " + e.getMessage());
         }
         return empleados;
+    }
+
+
+    protected boolean updateFile(Map<String, Empleado> empleados, File file) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (Empleado empleado : empleados.values()) {
+                writer.write(empleado.toString());
+                writer.newLine();
+            }
+            return true;
+        } catch (IOException e) {
+            System.out.println("Error al actualizar el fichero: " + e.getMessage());
+        }
+        return false;
     }
 
 }

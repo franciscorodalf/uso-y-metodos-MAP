@@ -1,11 +1,7 @@
 package main.java.es.ies.puerto.model.fichero;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
@@ -18,60 +14,51 @@ import main.java.es.ies.puerto.model.Operations;
 public class FileOperations extends MapOperation implements Operations {
 
     File fichero;
-    String path = "C:\\Users\\Francisco\\Documents\\GitHub\\uso-y-metodos-java\\src\\main\\resources\\empleados.txt";
+    String nombreFichero = "empleados.txt";
+    String path = "src/main/resources/empleados.txt";
 
     public FileOperations() {
-        fichero = new File(path);
-        if (!fichero.exists() || !fichero.isFile()) {
-            throw new IllegalArgumentException("El recurso no es de tipo fichero " + path);
+        // fichero = new File(path);
+
+        try {
+            URL source = getClass().getClassLoader().getResource(nombreFichero);
+            fichero = new File(source.toURI());
+            if (!fichero.exists() || !fichero.isFile()) {
+                throw new IllegalArgumentException("El recurso no es de tipo fichero " + path);
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException();
         }
     }
 
     @Override
     public boolean create(Empleado empleado) {
-        if (empleado == null || empleado.getIdentificador() == null) {
+        if (empleado == null || empleado.getIdentificador() == null || empleado.getIdentificador().isEmpty()) {
             return false;
         }
-        Map<String, Empleado> empleados = new TreeMap<>();
+        Map<String, Empleado> empleados = readFile(fichero);
         if (empleados.containsValue(empleado)) {
             return false;
         }
-        return create(empleado.toString(), fichero);
-    }
-
-    public static boolean create(String data, File file) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-            writer.write(data);
-            writer.newLine();
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
+        empleados.putIfAbsent(empleado.getIdentificador(), empleado);
+        return updateFile(empleados, fichero);
     }
 
     @Override
     public Empleado read(String identificador) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(fichero))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] arrayLine = line.split(",");
-                if (arrayLine[0].equals(identificador)) {
-                    return new Empleado(arrayLine[0], arrayLine[1], arrayLine[2],
-                            Double.parseDouble(arrayLine[3]), arrayLine[4]);
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Error al leer el archivo: " + e.getMessage());
+        if (identificador == null || identificador.isEmpty()) {
+            return null;
         }
-        return null;
+        Map<String, Empleado> empleados = readFile(fichero);
+        return empleados.get(identificador);
     }
 
     @Override
     public Empleado read(Empleado empleado) {
-        if (empleado == null || empleado.getIdentificador() == null) {
+        if (empleado == null || empleado.getIdentificador() == null || empleado.getIdentificador().isEmpty()) {
             return null;
         }
-        return empleado;
+        return read(empleado.getIdentificador());
     }
 
     @Override
@@ -80,24 +67,24 @@ public class FileOperations extends MapOperation implements Operations {
             return false;
         }
 
-        Map<String, Empleado> empleados = read(fichero);
+        Map<String, Empleado> empleados = readFile(fichero);
 
         if (!empleados.containsKey(empleado.getIdentificador())) {
             return false;
         }
-
-        empleados.replace(empleado.getIdentificador(), empleado);
-
+        if (empleados.replace(empleado.getIdentificador(), empleado) != null) {
+            return updateFile(empleados, fichero);
+        }
         return updateFile(empleados, fichero);
     }
 
     @Override
     public boolean delete(String identificador) {
-        if (identificador == null) {
+        if (identificador == null || identificador.isEmpty()) {
             return false;
         }
 
-        Map<String, Empleado> empleados = read(fichero);
+        Map<String, Empleado> empleados = readFile(fichero);
 
         if (!empleados.containsKey(identificador)) {
             return false;
@@ -135,7 +122,7 @@ public class FileOperations extends MapOperation implements Operations {
         LocalDate inicio = LocalDate.parse(fechaInicial, formato);
         String fechaFinal = fechaFin;
         LocalDate fin = LocalDate.parse(fechaFinal, formato);
-        Map<String, Empleado> empleados = read(fichero);
+        Map<String, Empleado> empleados = readFile(fichero);
         if (empleados == null) {
             return null;
         }
